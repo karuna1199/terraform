@@ -1,0 +1,49 @@
+resource "azurerm_resource_group" "main" {
+  name     = "example-resources"
+  location = "West US"
+}
+
+resource "azurerm_storage_account" "test_sa" {
+  name                     = "test_sa"
+  resource_group_name      = "${var.rg_name}"
+  location                 = "${var.location}"
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_monitor_action_group" "test_ag" {
+  name                = "${var.action_group_name}"
+  resource_group_name = "${var.rg_name}"
+  short_name          = "action"
+ 
+  webhook_receiver {
+    name        = "${var.webhook_name}"
+    service_uri = "${var.webhook_url}"
+  }
+}
+
+
+resource "azurerm_monitor_metric_alert" "storageAlert01" {
+  name                = "storage-metricalert"
+  resource_group_name = "${var.rg_name}"
+  scopes              = ["${var.alert_storage_id}"]
+  description         = "Action will be triggered when Transactions count is greater than 50."
+ 
+  criteria {
+    metric_namespace = "Microsoft.Storage/storageAccounts"
+    metric_name      = "Transactions"
+    aggregation      = "Total"
+    operator         = "GreaterThan"
+    threshold        = "${var.storage_transaction_threshold}"
+ 
+    dimension {
+      name     = "ApiName"
+      operator = "Include"
+      values   = ["*"]
+    }
+  }
+ 
+  action {
+    action_group_id = "${var.alert_group_id}"
+  }
+}
