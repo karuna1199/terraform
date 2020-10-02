@@ -1,0 +1,9 @@
+variable "rg_name" {}
+variable "action_group_name" {}
+variable "webhook_service_uri" {}
+variable "webhook_receiver_name" {}
+variable "aks_metric_alert_name" {}
+variable "aks_metric_name" {}
+variable "aks_aggregation" {}
+variable "aks_operator" {}
+variable "aks_threshold" {}
