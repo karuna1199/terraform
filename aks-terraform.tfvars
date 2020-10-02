@@ -1,0 +1,9 @@
+rg_name = "newrg"
+action_group_name = "example-actiongroup"
+webhook_service_uri = "http://example.com/alert"
+webhook_receiver_name = "callmyapi"
+aks_metric_alert_name = "node_alert"
+aks_metric_name = "CpuUsagePercentage"
+aks_aggregation = "Average"
+aks_operator = "GreaterThanOrEqual"
+aks_threshold = 80
