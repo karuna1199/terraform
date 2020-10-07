@@ -1,18 +1,11 @@
 provider "azurerm" {
-  version = "=2.21.0"
+  subscription_id ="0ddfed24-adb8-4733-bf11-2c1a518f9ee7"
 
-  subscription_id = var.subscription_id
-  client_id       = var.serviceprinciple_id
-  client_secret   = var.serviceprinciple_key
-  tenant_id       = var.tenant_id
-
+  tenant_id       = "3014603d-dc6a-45a2-b51e-d0ee2a89ad81"
+  version = "=2.20.0"
   features {}
+  skip_provider_registration = true
 }
-
-provider "azuread" {
-  version = ">= 0.6"
-}
-
 
 ########################
 # Data sources section #
@@ -44,11 +37,8 @@ data "azurerm_subnet" "sn-cr-ask-cradle-test" {
   resource_group_name  = var.aks_vnet_rg_name
 }
 
-
-
-
 resource "azurerm_key_vault" "key_vault" {
-  name                        = "u2-${var.environment}-kv"
+  name                        = "u2-${var.name}-kv"
   location                    = data.azurerm_resource_group.rg-u2k8s-test.location
   resource_group_name         = data.azurerm_resource_group.rg-u2k8s-test.name
   enabled_for_disk_encryption = true
@@ -59,42 +49,17 @@ resource "azurerm_key_vault" "key_vault" {
   sku_name = "standard"
 
   network_acls {
-    default_action = "Allow"
+    #default_action = "Allow"
+    default_action = "Deny"
+    bypass         = "AzureServices"
 
-    # 
-    bypass = "AzureServices"
-
-    # Enable ip_rules to access key vault for on-prem
-    # ip_rules = [
-    #   "12.163.96.0/24",
-    #   "149.111.26.128/32",
-    #   "149.111.28.128/32",
-    #   "149.111.30.128/32",
-    #   "161.249.144.14/32",
-    #   "161.249.16.0/23",
-    #   "161.249.176.14/32",
-    #   "161.249.192.14/32",
-    #   "161.249.72.14/32",
-    #   "161.249.80.14/32",
-    #   "161.249.96.14/32",
-    #   "198.203.175.175/32",
-    #   "198.203.177.177/32",
-    #   "198.203.181.181/32",
-    #   "203.39.148.18/32",
-    #   "220.227.15.70/32",
-    # ]
-
-    # Enable this code block only if default_action is deny and specify which subnet can access kye vault
-    # virtual_network_subnet_ids = [data.azurerm_subnet.sn-cr-ask-cradle-test.id]
   }
 
-}
 
-resource "azurerm_key_vault_access_policy" "tf_client" {
-  key_vault_id = azurerm_key_vault.key_vault.id
 
+ access_policy{
   tenant_id = data.azurerm_client_config.current.tenant_id
-  object_id = data.azurerm_client_config.current.object_id
+  object_id = "7fc3345e-fdc9-4084-b638-34960de3ea40"
 
   secret_permissions = [
     "Get",
@@ -112,4 +77,21 @@ resource "azurerm_key_vault_access_policy" "tf_client" {
   ]
 
   storage_permissions = []
+}
+}
+#####PrivateLink###
+
+resource "azurerm_private_endpoint" "pekv" {
+  name                = "example-endpoint"
+  location            = data.azurerm_resource_group.rg-u2k8s-test.location
+  resource_group_name = data.azurerm_resource_group.rg-u2k8s-test.name
+  subnet_id           = data.azurerm_subnet.sn-cr-ask-cradle-test.id
+  depends_on         = [azurerm_key_vault.key_vault]
+  private_service_connection {
+    name                           = "example-privateserviceconnection"
+    private_connection_resource_id = azurerm_key_vault.key_vault.id
+    is_manual_connection           = false
+    subresource_names = ["Vault"]
+  }
+
 }
