@@ -1,0 +1,9 @@
+rg_name = "mkurra***"
+action_group_name = "example-actiongroup"
+webhook_service_uri = "http://example.com/alert"
+webhook_receiver_name = "callmyapi"
+db_metric_alert_name = "db-metric-alert"
+db_metric_name = "storage_percent"
+db_aggregation = "Maximum"
+db_operator = "GreaterThan"
+db_threshold = 50
